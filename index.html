@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RCADS Testversion</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 10px; }
+        h1 { text-align: center; }
+        .question { margin-bottom: 15px; }
+        label { display: block; margin: 5px 0; }
+        .result { margin-top: 20px; font-weight: bold; white-space: pre-line; }
+        .buttons { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>RCADS Formulär</h1>
+    <form id="rcadsForm">
+        <!-- Dynamically generate all questions -->
+        <div class="question" id="questionsContainer"></div>
+
+        <div class="buttons">
+            <button type="submit">Skicka in</button>
+            <button type="button" id="resetButton">Återställ</button>
+        </div>
+    </form>
+
+    <div class="result" id="result"></div>
+
+    <script>
+        // Alla RCADS-frågor och vilken delskala de tillhör
+        const questionsData = [
+            { text: "Jag oroar mig för saker", scale: "Generaliserad ångest" },
+            { text: "Jag känner mig ledsen eller tom", scale: "Depression" },
+            { text: "När jag har problem får jag en konstig känsla i magen", scale: "Panikstörning" },
+            { text: "Jag oroar mig när jag tror att jag har gjort dåligt ifrån mig", scale: "Social fobi" },
+            { text: "Jag skulle känna mig rädd om jag var ensam hemma", scale: "Separationsångest" },
+            { text: "Ingenting är särskilt roligt längre", scale: "Depression" },
+            { text: "Jag känner mig rädd när jag måste göra ett prov", scale: "Social fobi" },
+            { text: "Jag känner mig orolig om jag tror att någon är arg på mig", scale: "Social fobi" },
+            { text: "Jag oroar mig för att vara borta från mina föräldrar", scale: "Separationsångest" },
+            { text: "Jag blir störd av hemska eller dumma tankar eller bilder i mitt huvud", scale: "Tvångssyndrom" },
+            { text: "Jag har svårt att sova", scale: "Depression" },
+            { text: "Jag oroar mig över att jag ska misslyckas i skolan", scale: "Social fobi" },
+            { text: "Jag oroar mig över att något hemskt ska hända någon i min familj", scale: "Generaliserad ångest" },
+            { text: "Jag kan plötsligt känna att jag inte kan andas, fast det inte finns någon anledning till det", scale: "Panikstörning" },
+            { text: "Jag har problem med min aptit", scale: "Depression" },
+            { text: "Jag måste kontrollera om och om igen att jag har gjort saker rätt", scale: "Tvångssyndrom" },
+            { text: "Jag känner mig rädd om jag måste sova ensam", scale: "Separationsångest" },
+            { text: "Jag har svårt att gå till skolan på morgonen, eftersom jag känner mig nervös eller rädd", scale: "Separationsångest" },
+            { text: "Jag har ingen energi till att göra något", scale: "Depression" },
+            { text: "Jag oroar mig över att verka dum", scale: "Social fobi" },
+            { text: "Jag är mycket trött", scale: "Depression" },
+            { text: "Jag oroar mig över att dåliga saker ska hända mig", scale: "Generaliserad ångest" },
+            { text: "Jag kan inte få hemska eller dumma tankar ur mitt huvud", scale: "Tvångssyndrom" },
+            { text: "När jag har problem slår mitt hjärta väldigt fort", scale: "Panikstörning" },
+            { text: "Jag kan inte tänka klart", scale: "Depression" },
+            { text: "Jag börjar plötsligt skaka eller darra utan att det finns någon anledning", scale: "Panikstörning" },
+            { text: "Jag oroar mig över att något hemskt ska hända mig", scale: "Generaliserad ångest" },
+            { text: "När jag har problem känner jag mig darrig", scale: "Panikstörning" },
+            { text: "Jag känner mig värdelös", scale: "Depression" },
+            { text: "Jag oroar mig över att jag ska göra misstag", scale: "Social fobi" },
+            { text: "Jag måste tänka speciella tankar för att hindra att hemska saker händer", scale: "Tvångssyndrom" },
+            { text: "Jag oroar mig över vad andra människor tänker om mig", scale: "Social fobi" },
+            { text: "Jag är rädd för att vara på platser med mycket folk", scale: "Social fobi" },
+            { text: "Plötsligt kan jag känna mig väldigt rädd utan någon anledning", scale: "Panikstörning" },
+            { text: "Jag oroar mig över vad som kommer att hända", scale: "Generaliserad ångest" },
+            { text: "Jag blir plötsligt yr eller svag utan att det finns någon anledning", scale: "Panikstörning" },
+            { text: "Jag tänker på döden", scale: "Depression" },
+            { text: "Jag känner mig rädd om jag måste prata framför klassen", scale: "Social fobi" },
+            { text: "Mitt hjärta kan plötsligt börja slå för snabbt utan någon anledning", scale: "Panikstörning" },
+            { text: "Det känns som om jag inte har någon lust att röra på mig", scale: "Depression" },
+            { text: "Jag oroar mig över att jag plötsligt ska få en känsla av att vara rädd", scale: "Panikstörning" },
+            { text: "Jag måste göra vissa saker om och om igen", scale: "Tvångssyndrom" },
+            { text: "Jag är rädd för att göra bort mig framför andra människor", scale: "Social fobi" },
+            { text: "Jag måste göra vissa saker på precis rätt sätt", scale: "Tvångssyndrom" },
+            { text: "Jag oroar mig när jag går och lägger mig på kvällen", scale: "Separationsångest" },
+            { text: "Jag skulle känna mig rädd om jag var tvungen att vara borta hemifrån över natten", scale: "Separationsångest" },
+            { text: "Jag känner mig rastlös", scale: "Depression" }
+        ];
+
+        // Dynamiskt generera frågorna
+        const questionsContainer = document.getElementById('questionsContainer');
+        questionsData.forEach((question, index) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.classList.add('question');
+            questionDiv.innerHTML = `
+                <label>${index + 1}. ${question.text}</label>
+                <input type="radio" name="q${index + 1}" value="0"> Aldrig
+                <input type="radio" name="q${index + 1}" value="1"> Ibland
+                <input type="radio" name="q${index + 1}" value="2"> Ofta
+                <input type="radio" name="q${index + 1}" value="3"> Alltid
+            `;
+            questionsContainer.appendChild(questionDiv);
+        });
+
+        document.getElementById('rcadsForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            let scores = {
+                "Social fobi": 0,
+                "Panikstörning": 0,
+                "Depression": 0,
+                "Separationsångest": 0,
+                "Generaliserad ångest": 0,
+                "Tvångssyndrom": 0
+            };
+
+            let totalSum = 0; // Variabel för att hålla den totala summan av alla frågor
+
+            const answers = new FormData(event.target);
+            questionsData.forEach((question, index) => {
+                const answerValue = parseInt(answers.get(`q${index + 1}`) || 0);
+                scores[question.scale] += answerValue;
+                totalSum += answerValue; // Lägg till poängen till totalsumman
+            });
+
+            let resultText = `Resultat för varje delskala:\n\n`;
+            for (let [scale, score] of Object.entries(scores)) {
+                const questionNumbers = questionsData
+                    .map((q, i) => q.scale === scale ? i + 1 : null)
+                    .filter(num => num !== null)
+                    .join(', ');
+                resultText += `${scale}: ${score} poäng (Frågor: ${questionNumbers})\n\n`;
+            }
+
+            resultText += `Total summa för alla 47 frågor: ${totalSum} poäng`;
+
+            document.getElementById('result').innerText = resultText;
+        });
+
+        // Funktion för återställningsknappen
+        document.getElementById('resetButton').addEventListener('click', function() {
+            document.getElementById('rcadsForm').reset(); // Återställ formuläret
+            document.getElementById('result').innerText = ''; // Töm resultatvisningen
+        });
+    </script>
+</body>
+</html>
